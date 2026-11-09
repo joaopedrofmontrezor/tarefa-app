@@ -31,18 +31,20 @@ class DatabaseHelper {
     );
   }
 
+  // Create (Inserir)
   Future<int> criarTarefa(TarefaModel tarefa) async {
     final db = await instance.database;
     return await db.insert('tarefas', tarefa.toMap());
   }
 
- 
+  // Read (Consultar)
   Future<List<TarefaModel>> listarTarefas() async {
     final db = await instance.database;
     final result = await db.query('tarefas', orderBy: 'id DESC');
     return result.map((map) => TarefaModel.fromMap(map)).toList();
   }
 
+  // Update (Atualizar)
   Future<int> atualizarTarefa(TarefaModel tarefa) async {
     final db = await instance.database;
     return await db.update(
@@ -53,13 +55,13 @@ class DatabaseHelper {
     );
   }
 
-
+  // Delete (Excluir)
   Future<int> deletarTarefa(int id) async {
     final db = await instance.database;
     return await db.delete('tarefas', where: 'id = ?', whereArgs: [id]);
   }
 
-  
+  // Desafio Técnico Avançado: Busca Local via SQL (LIKE)
   Future<List<TarefaModel>> buscarTarefas(String termo) async {
     final db = await instance.database;
     final result = await db.query(
@@ -71,4 +73,3 @@ class DatabaseHelper {
     return result.map((map) => TarefaModel.fromMap(map)).toList();
   }
 }
-

@@ -8,7 +8,7 @@
 
 ## 📖 Visão Geral do Projeto
 
-Este projeto consiste em um **Gerenciador de Tarefas / Anotações** desenvolvido em **Flutter**, utilizando o motor relacional **SQLite** por meio do pacote `sqflite` (e suporte FFI via `sqflite_common_ffi` para execução em Desktop).
+Este projeto consiste em um **Gerenciador de Tarefas / Anotações** desenvolvido em **Flutter**, utilizando o motor relacional **SQLite** por meio do pacote `sqflite` (e suporte FFI via `sqflite_common_ffi` para execução em Desktop Windows e `sqflite_common_ffi_web` para Web).
 
 O aplicativo implementa o ciclo completo de operações **CRUD** com persistência offline, arquitetura desacoplada via padrão **Singleton** e interface reativa atualizada via `ListView.builder`.
 
@@ -29,8 +29,6 @@ O aplicativo implementa o ciclo completo de operações **CRUD** com persistênc
 
 ### 🏆 Desafios Práticos Implementados
 
-Além do roteiro base, o projeto implementa os seguintes desafios:
-
 1. **Contador de Concluídas (Nível Básico):**
    - Exibição dinâmica no `AppBar` indicando o progresso das tarefas no formato `X/Y concluídas`.
 2. **Busca Local via SQL LIKE (Nível Avançado):**
@@ -45,7 +43,7 @@ Além do roteiro base, o projeto implementa os seguintes desafios:
   - `toMap()`: Converte a entidade Dart em `Map<String, dynamic>` para inserção/atualização no banco.
   - `fromMap()`: Converte registros retornados pelo SQLite em instâncias tipadas de `TarefaModel`.
 - **Interface Reativa:** Sincronização automática entre o banco de dados e a interface utilizando `StatefulWidget`, `setState()` e `ListView.builder`.
-- **Suporte Multiplataforma (Desktop Windows & Mobile):** Configuração com `sqflite_common_ffi` no `main.dart`, permitindo executar tanto em emuladores Android quanto nativamente no Windows Desktop.
+- **Suporte Multiplataforma (Desktop Windows, Web & Mobile):** Configuração com `sqflite_common_ffi` e `sqflite_common_ffi_web` no `main.dart`, permitindo rodar em Android, Windows Desktop e navegadores Web.
 
 ---
 
@@ -75,6 +73,7 @@ dependencies:
   sqflite: ^2.4.5
   path: ^1.9.1
   sqflite_common_ffi: ^2.4.5
+  sqflite_common_ffi_web: ^1.2.0
   sqlite3_flutter_libs: ^0.6.0+eol
   cupertino_icons: ^1.0.8
 ```
@@ -85,26 +84,24 @@ dependencies:
 
 ### Pré-requisitos
 - **Flutter SDK** instalado (versão 3.x ou superior)
-- Dispositivo Android (ou emulador) configurado **ou** ambiente desktop Windows habilitado (`flutter config --enable-windows-desktop`)
 
 ### Passos:
 
-1. **Clone o repositório ou acesse a pasta do projeto:**
-   ```bash
-   cd aula13_sqlite
-   ```
-
-2. **Instale as dependências:**
+1. **Instale as dependências:**
    ```bash
    flutter pub get
    ```
 
-3. **Execute a aplicação:**
+2. **Execute a aplicação:**
    - No Windows Desktop:
      ```bash
      flutter run -d windows
      ```
-   - No Android (emulador ou dispositivo físico conectado):
+   - No Android (emulador ou dispositivo conectado):
      ```bash
      flutter run -d android
+     ```
+   - No Chrome (Web):
+     ```bash
+     flutter run -d chrome
      ```

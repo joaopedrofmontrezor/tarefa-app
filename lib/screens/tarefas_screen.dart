@@ -30,26 +30,44 @@ class _TarefasScreenState extends State<TarefasScreen> {
 
   Future<void> _carregarTarefas() async {
     setState(() => _carregando = true);
-    final lista = await _dbHelper.listarTarefas();
-    setState(() {
-      _tarefas = lista;
-      _carregando = false;
-    });
+    try {
+      final lista = await _dbHelper.listarTarefas();
+      if (mounted) {
+        setState(() {
+          _tarefas = lista;
+        });
+      }
+    } catch (e, stack) {
+      debugPrint('Erro ao carregar tarefas: $e\n$stack');
+    } finally {
+      if (mounted) {
+        setState(() => _carregando = false);
+      }
+    }
   }
 
-  
+  // Desafio Avançado: Busca Local via SQL (LIKE)
   Future<void> _executarBusca(String termo) async {
     setState(() => _carregando = true);
-    final lista = termo.isEmpty
-        ? await _dbHelper.listarTarefas()
-        : await _dbHelper.buscarTarefas(termo);
-    setState(() {
-      _tarefas = lista;
-      _carregando = false;
-    });
+    try {
+      final lista = termo.trim().isEmpty
+          ? await _dbHelper.listarTarefas()
+          : await _dbHelper.buscarTarefas(termo.trim());
+      if (mounted) {
+        setState(() {
+          _tarefas = lista;
+        });
+      }
+    } catch (e) {
+      debugPrint('Erro ao buscar tarefas: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _carregando = false);
+      }
+    }
   }
 
- 
+  // Desafio Básico: Contador de Concluídas
   String _contadorTexto() {
     final total = _tarefas.length;
     final concluidas = _tarefas.where((t) => t.concluida).length;
@@ -57,10 +75,8 @@ class _TarefasScreenState extends State<TarefasScreen> {
   }
 
   void _abrirFormulario({TarefaModel? tarefa}) {
-    final tituloController =
-        TextEditingController(text: tarefa?.titulo ?? '');
-    final descController =
-        TextEditingController(text: tarefa?.descricao ?? '');
+    final tituloController = TextEditingController(text: tarefa?.titulo ?? '');
+    final descController = TextEditingController(text: tarefa?.descricao ?? '');
 
     showModalBottomSheet(
       context: context,
@@ -82,8 +98,10 @@ class _TarefasScreenState extends State<TarefasScreen> {
                 fontWeight: FontWeight.bold,
               ),
             ),
+            const SizedBox(height: 12),
             TextField(
               controller: tituloController,
+              autofocus: true,
               decoration: const InputDecoration(labelText: 'Título'),
             ),
             TextField(
@@ -93,20 +111,22 @@ class _TarefasScreenState extends State<TarefasScreen> {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () async {
-                if (tituloController.text.isEmpty) return;
+                final titulo = tituloController.text.trim();
+                if (titulo.isEmpty) return;
+
                 if (tarefa == null) {
                   await _dbHelper.criarTarefa(
                     TarefaModel(
-                      titulo: tituloController.text,
-                      descricao: descController.text,
+                      titulo: titulo,
+                      descricao: descController.text.trim(),
                     ),
                   );
                 } else {
                   await _dbHelper.atualizarTarefa(
                     TarefaModel(
                       id: tarefa.id,
-                      titulo: tituloController.text,
-                      descricao: descController.text,
+                      titulo: titulo,
+                      descricao: descController.text.trim(),
                       concluida: tarefa.concluida,
                     ),
                   );
@@ -124,28 +144,32 @@ class _TarefasScreenState extends State<TarefasScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Tarefas SQLite'),
         centerTitle: true,
-       
+        // Desafio Básico: Contador de Concluídas visível com bom contraste
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(24),
           child: Padding(
-            padding: const EdgeInsets.only(bottom: 4),
+            padding: const EdgeInsets.only(bottom: 6),
             child: Text(
               _contadorTexto(),
               style: TextStyle(
                 fontSize: 14,
-                color: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.8),
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.primary,
               ),
             ),
           ),
         ),
         actions: [
-          
+          // Desafio Avançado: Botão para abrir/fechar campo de busca
           IconButton(
             icon: Icon(_buscando ? Icons.close : Icons.search),
+            tooltip: _buscando ? 'Fechar busca' : 'Buscar',
             onPressed: () {
               setState(() {
                 _buscando = !_buscando;
@@ -164,14 +188,15 @@ class _TarefasScreenState extends State<TarefasScreen> {
       ),
       body: Column(
         children: [
-        
+          // Desafio Avançado: Campo de busca local via SQL (LIKE)
           if (_buscando)
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: TextField(
                 controller: _buscaController,
+                autofocus: true,
                 decoration: InputDecoration(
-                  hintText: 'Buscar tarefas...',
+                  hintText: 'Buscar por título ou descrição...',
                   prefixIcon: const Icon(Icons.search),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -191,7 +216,17 @@ class _TarefasScreenState extends State<TarefasScreen> {
             child: _carregando
                 ? const Center(child: CircularProgressIndicator())
                 : _tarefas.isEmpty
-                    ? const Center(child: Text('Nenhuma tarefa cadastrada.'))
+                    ? Center(
+                        child: Text(
+                          _buscando
+                              ? 'Nenhuma tarefa encontrada para esta busca.'
+                              : 'Nenhuma tarefa cadastrada.',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: theme.colorScheme.outline,
+                          ),
+                        ),
+                      )
                     : ListView.builder(
                         itemCount: _tarefas.length,
                         itemBuilder: (ctx, index) {
